@@ -1,7 +1,7 @@
 # 演示脚本 — 休假助手
 
 九个步骤，完整展示 Foundry Agent 的生命周期。所有数据均为模拟数据。
-前置条件：Agent 已在本地运行（`scripts/run-local.sh`）或已部署、已完成 `az login`、
+前置条件：Agent 已在本地运行（`MCP_MODE=local python agents/leave_assistant/main.py`）或已部署、已完成 `az login`、
 前端已运行（`frontend/web-chat-ui`），且 Foundry IQ 知识库已创建
 （`knowledge/README.md`）。
 
