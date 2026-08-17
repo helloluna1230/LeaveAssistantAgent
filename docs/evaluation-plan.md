@@ -1,56 +1,52 @@
-# Evaluation Plan — Leave Assistant Demo
+# 评估方案 — 休假助手 Demo
 
-Two layers of evaluation:
+评估分为两层：
 
-1. **Deterministic backend boundary** (no model) — `python evaluation/run_eval.py`.
-   Proves the MCP service denies cross-user/impersonation access and returns the
-   correct error codes. Writes `evaluation/results/backend_boundary.json`. Current
-   result: security 7/7, exception 6/6.
-2. **Model-based agent quality/safety** — `azd ai agent eval run --config
-   evaluation/hosted_functional_eval.yaml` against the deployed hosted
-   agent. Scores task adherence,
-   task completion, tool-call/selection accuracy, groundedness, retrieval
-   relevance, response completeness, policy compliance, safety, hallucination
-   rate, latency, and token usage.
+1. **确定性的后端边界**（不涉及模型）——`python evaluation/run_eval.py`。
+   证明 MCP 服务会拒绝跨用户/冒充访问，并返回正确的错误码。结果写入
+   `evaluation/results/backend_boundary.json`。当前结果：安全 7/7，异常 6/6。
+2. **基于模型的 Agent 质量/安全评估**——`azd ai agent eval run --config
+   evaluation/hosted_functional_eval.yaml`，针对已部署的 Hosted Agent 运行。
+   对以下维度打分：任务遵循度、任务完成度、工具调用/选择准确率、有据性
+   （groundedness）、检索相关性、回答完整性、政策合规、安全、幻觉率、延迟和
+   token 用量。
 
-## Datasets (`evaluation/datasets/`)
-| File | Category | Focus |
-|------|----------|-------|
-| `functional.jsonl` | functional | balance, history, policy, planning, memory, multi-turn, no-tool |
-| `tool.jsonl` | tool | correct tool selection incl. "no tool needed" and code interpreter |
-| `security.jsonl` | security | cross-user, prompt injection, identity spoof, KB injection, write confirmation |
-| `exception.jsonl` | exception | MCP outage, empty data, invalid range, insufficient balance, KB no-answer, unsupported type |
+## 数据集（`evaluation/datasets/`）
+| 文件 | 类别 | 关注点 |
+|------|----------|------|
+| `functional.jsonl` | 功能 | 余额、历史、政策、规划、Memory、多轮、无需工具 |
+| `tool.jsonl` | 工具 | 工具选择是否正确，含"无需工具"和 Code Interpreter |
+| `security.jsonl` | 安全 | 跨用户、提示注入、身份伪造、知识库注入、写操作确认 |
+| `exception.jsonl` | 异常 | MCP 故障、空数据、区间非法、余额不足、知识库无答案、不支持的类型 |
 
-Each row carries `expected_tools` / `forbidden_tools` / `expected_behavior` /
-`expected_error` for automatic grading.
+每行都带有 `expected_tools` / `forbidden_tools` / `expected_behavior` /
+`expected_error`，用于自动评分。
 
-## Agent Optimizer candidate search
+## Agent Optimizer 候选搜索
 
-`agent-optimizer/optimizer.yaml` defines the deployed baseline, training dataset,
-Optimizer-compatible evaluators, and candidate count. Run `azd ai agent optimize
---config agent-optimizer/optimizer.yaml --no-prompt` to search instruction, skill, or model
-candidates. It is not a static `variants` A/B file.
+`agent-optimizer/optimizer.yaml` 定义了已部署的基线、训练数据集、与 Optimizer 兼容的
+评估器以及候选数量。运行 `azd ai agent optimize --config
+agent-optimizer/optimizer.yaml --no-prompt` 可以搜索指令、Skill 或模型方面的候选。
+它不是一个静态的 `variants` A/B 文件。
 
-The custom `leave-assistant-tool-selection` v7 evaluator is intentionally absent
-from the Optimizer config: its `expected_tools` input is unavailable in the
-Optimizer dataset contract. It remains a required post-deployment regression
-check in `evaluation/hosted_functional_eval.yaml`.
+自定义的 `leave-assistant-tool-selection` v7 评估器故意不放进 Optimizer 配置：它的
+`expected_tools` 输入在 Optimizer 数据集契约中不可用。它作为部署后的必备回归检查，保留在
+`evaluation/hosted_functional_eval.yaml` 中。
 
-> Optimizer note: keep `model_search_space` a YAML list of **real** deployment
-> names (e.g. `- gpt-5.6-luna`). A malformed search space makes every candidate
-> version fail to provision.
+> Optimizer 提示：`model_search_space` 必须是一个由**真实**部署名组成的 YAML 列表
+> （例如 `- gpt-5.6-luna`）。搜索空间格式错误会导致每个候选版本都无法预配。
 
-## Regression gates
-- safety = 1.0 (every security case must pass)
+## 回归门槛
+- safety = 1.0（每个安全用例都必须通过）
 - policy_compliance ≥ 0.9
 - tool_selection_accuracy ≥ 0.85
 - groundedness ≥ 0.85
 - hallucination_rate ≤ 0.05
 
-## Regression workflow
-1. Harvest production traces into datasets (`eval-datasets` workflow).
-2. Run Agent Optimizer and keep the baseline when no candidate improves its score.
-3. Apply a winning candidate locally and review its prompt/skill/model changes.
-4. Deploy the reviewed candidate as a new Agent version.
-5. Update `hosted_functional_eval.yaml` and run the hosted regression suite.
-6. Block promotion when safety, policy, or deterministic tool-selection gates regress.
+## 回归流程
+1. 把生产 trace 汇总进数据集（`eval-datasets` 工作流）。
+2. 运行 Agent Optimizer；若没有候选优于基线，则保留基线。
+3. 在本地应用胜出候选，审阅其提示词/Skill/模型的改动。
+4. 把审阅过的候选作为新的 Agent 版本部署。
+5. 更新 `hosted_functional_eval.yaml` 并运行 Hosted 回归套件。
+6. 当安全、政策或确定性工具选择门槛出现退化时，阻止晋升发布。

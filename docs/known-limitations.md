@@ -1,92 +1,75 @@
-# Known Limitations
+# 已知限制
 
-This is a demonstration reference, not a production system.
+这是一个演示参考项目，不是生产系统。
 
-## Data & scope
-- **All HR data is simulated** (`mcp-server/leave_mcp/mock_data.py`). No real HR
-  integration, approvals, or record mutations. Write operations only produce
-  non-binding previews.
+## 数据与范围
+- **所有 HR 数据均为模拟数据**（`mcp-server/leave_mcp/mock_data.py`）。没有接入真实
+  HR、没有审批、也不会修改任何记录。写操作只会生成不具约束力的预览。
 
-## Identity
-- Demo uses a shared MCP API key plus a plaintext simulated employee id, not real
-  user sign-in. The MCP validates the key before accepting `x-user-token`, then
-  applies server-side authorization. Real user authentication, token refresh, and
-  tenant/claims validation are not implemented.
-- `POST /demo/token` is retained as a frontend compatibility endpoint, but returns
-  a validated simulated employee id rather than an access token. Replace it with
-  real Entra ID / IdP sign-in for production (see `docs/security-design.md`).
+## 身份
+- Demo 使用共享的 MCP API key 加明文模拟员工号，而不是真实用户登录。MCP 会先校验
+  key，再接受 `x-user-token`，然后执行服务端授权。真实用户认证、令牌刷新以及
+  租户/声明校验均未实现。
+- `POST /demo/token` 作为前端兼容端点保留，但它返回的是经校验的模拟员工号，而不是
+  访问令牌。生产环境请用真实的 Entra ID / IdP 登录替换（见 `docs/security-design.md`）。
 
-## Per-request identity in hosted mode
-- **Implemented** for the local host: `main.py` adds a pure-ASGI `_IdentityMiddleware`
-  that maps each request's `x-user-token` / `Authorization` onto the identity
-  contextvar (falling back to `DEMO_DEFAULT_USER` when absent), so switching users in
-  the UI truly switches the verified identity (E1001→9 days, E1002→1 day). For the
-  deployed Foundry runtime, validate that the same middleware hook is honored; the
-  toolbox/remote `x-user-token` forwarding still applies for tool calls.
+## Hosted 模式下的按请求身份
+- 本地主机**已实现**：`main.py` 增加了一个纯 ASGI 的 `_IdentityMiddleware`，把每个
+  请求的 `x-user-token` / `Authorization` 映射到身份 contextvar（缺失时回退到
+  `DEMO_DEFAULT_USER`），因此在 UI 里切换用户会真正切换已验证身份
+  （E1001→9 天，E1002→1 天）。对于已部署的 Foundry 运行时，需验证同样的中间件钩子
+  是否被采纳；工具调用仍然依赖 toolbox/remote 的 `x-user-token` 转发。
 
-## Foundry-native features requiring the platform
-- **Foundry Toolbox** (`MCP_MODE=toolbox`, default): the toolbox is built by
-  `scripts/create_toolbox.py`, which needs a **preview** `azure-ai-projects` build
-  and `az login`. The `x-user-token` forwarding for per-user authorization depends
-  on the Toolbox/MCP-connection passing custom headers through to the Container App
-  MCP; if your toolbox configuration strips them, use `MCP_MODE=remote` for strict
-  per-user authz, or wire an OAuth-based MCP connection so the end-user identity is
-  proxied. Container-App credentials for the toolbox live in a Foundry connection
-  (`MCP_CONNECTION_ID`).
-- **Foundry IQ** knowledge base is created manually in the portal; in toolbox mode
-  it is attached as a toolbox tool (best-effort in `create_toolbox.py`), otherwise
-  via `remote_tools.build_knowledge_tool`. A grounded local fallback
-  (`knowledge_local.search` → `search_leave_policy` tool) provides cited policy
-  answers offline for the demo/eval; it is keyword-based, not semantic like IQ.
-- **Foundry Memory**: the demo uses a file-backed preference store with the same
-  get/set/delete interface; swap for a Foundry Memory Store in production.
-- **Platform-managed conversations**: with `RESPONSES_STORE=true` (default) the
-  Foundry Responses store persists each turn and resolves `previous_response_id`
-  server-side (retrieval scoped to the verified caller identity) — the client never
-  resends prior turns. Hosted deployments get the durable platform store
-  (`FoundryStorageProvider`); local runs auto-fall back to an in-process store
-  (multi-turn works within the running host but is lost on restart). This
-  conversation store is distinct from preference memory: it holds the Q&A thread,
-  never the whitelisted preferences. The web UI keeps a local transcript cache for
-  instant re-render, but a returning user (even on a new device) rehydrates the
-  thread from the platform: the host exposes an identity-scoped bookmark
-  (`GET/POST /session/state`, backed by `session_store.py`) holding only the last
-  Responses pointer, and the UI rebuilds the transcript via
-  `GET /responses/{id}/input_items` + `GET /responses/{id}`. Swap the file-backed
-  pointer store for a durable DB (e.g. Cosmos DB) in production; the get/set
-  interface is identical. Locally the in-process Responses store is wiped on host
-  restart, so a saved pointer may 404 after a restart — the UI falls back to the
-  local cache.
-- **Code Interpreter**: hosted mode renders charts via the Foundry Code Interpreter.
-  Offline, `analyze_leave_usage` (`analysis.analyze`) returns the chart-ready series
-  (monthly usage, used vs remaining, type distribution, expiring) but does not draw
-  images. **Toolbox/Tool Search** is exercised through the Foundry runtime. The
-  toolbox build (`scripts/create_toolbox.py`) uses the confirmed SDK classes
-  `CodeInterpreterToolboxTool` and `AzureAISearchTool`. ⚠️ Code Interpreter **through a
-  toolbox shares one container per project — it is NOT per-user isolated**; the agent
-  therefore analyzes only the caller's already-retrieved figures and never uploads
-  other users' data. For strict isolation, use a per-agent Code Interpreter or the
-  local `analyze_leave_usage` path.
-- **Harness**: step/tool-call budgets and transient-error retry are enforced at the
-  tool layer (`agents/harness/runtime.py`, reset per run in `memory.before_run`).
-  Model-loop step counting still depends on the framework surfacing per-step hooks.
-- **Observability**: tool/skill/memory/knowledge/code-interpreter spans are emitted
-  with redacted attributes; `trace_id`/`agent_version` surfacing to the frontend
-  response still depends on the hosting layer.
+## 依赖平台的 Foundry 原生特性
+- **Foundry Toolbox**（`MCP_MODE=toolbox`，默认）：Toolbox 由
+  `scripts/create_toolbox.py` 构建，需要**预览版**的 `azure-ai-projects` 以及
+  `az login`。用于按用户授权的 `x-user-token` 转发依赖 Toolbox/MCP 连接把自定义请求头
+  透传到 Container App MCP；如果你的 Toolbox 配置会剥离这些头，请改用
+  `MCP_MODE=remote` 以获得严格的按用户授权，或接入基于 OAuth 的 MCP 连接以代理终端
+  用户身份。Toolbox 的 Container App 凭据保存在 Foundry 连接中（`MCP_CONNECTION_ID`）。
+- **Foundry IQ** 知识库需在门户中手动创建；在 toolbox 模式下它作为 Toolbox 工具附加
+  （在 `create_toolbox.py` 中尽力而为），否则通过 `remote_tools.build_knowledge_tool`
+  接入。本地还有一个有据可依的回退方案（`knowledge_local.search` → `search_leave_policy`
+  工具），可在离线的 Demo/评估中给出带引用的政策答案；它是基于关键词的，不像 IQ 那样
+  语义化。
+- **Foundry Memory**：Demo 使用一个基于文件的偏好存储，接口（get/set/delete）保持一致；
+  生产环境可替换为 Foundry Memory Store。
+- **平台托管的会话**：当 `RESPONSES_STORE=true`（默认）时，Foundry Responses 存储会
+  持久化每一轮，并在服务端解析 `previous_response_id`（检索范围限定为已验证的调用方
+  身份）——客户端无需重发历史轮次。Hosted 部署会用到持久化的平台存储
+  （`FoundryStorageProvider`）；本地运行则自动回退到进程内存储（在运行的主机内多轮可用，
+  但重启后丢失）。该会话存储与偏好 Memory 不同：它保存的是问答线程，绝不保存白名单偏好。
+  Web UI 会保留一份本地对话缓存以便即时重绘，但回访用户（即使换了新设备）会从平台重建
+  线程：主机暴露一个按身份隔离的书签（`GET/POST /session/state`，由 `session_store.py`
+  支撑），只保存最后一个 Responses 指针，UI 再通过
+  `GET /responses/{id}/input_items` + `GET /responses/{id}` 重建对话。生产环境请把基于
+  文件的指针存储换成持久化数据库（如 Cosmos DB）；get/set 接口完全一致。本地的进程内
+  Responses 存储会在主机重启时清空，因此保存的指针在重启后可能返回 404——此时 UI 会
+  回退到本地缓存。
+- **Code Interpreter**：Hosted 模式通过 Foundry Code Interpreter 渲染图表。离线时，
+  `analyze_leave_usage`（`analysis.analyze`）会返回可用于绘图的序列（月度用量、已用 vs
+  剩余、类型分布、即将过期），但不会绘制图像。**Toolbox/Tool Search** 通过 Foundry 运行时
+  演练。Toolbox 构建（`scripts/create_toolbox.py`）使用已确认的 SDK 类
+  `CodeInterpreterToolboxTool` 和 `AzureAISearchTool`。⚠️ 通过 Toolbox 使用的 Code
+  Interpreter **在一个项目内共享同一个容器——并非按用户隔离**；因此 Agent 只分析调用方
+  已经检索到的数据，绝不上传其他用户的数据。若需严格隔离，请使用按 Agent 独立的 Code
+  Interpreter 或本地的 `analyze_leave_usage` 路径。
+- **Harness**：步数/工具调用预算以及瞬时错误重试在工具层强制执行
+  （`agents/harness/runtime.py`，每次运行在 `memory.before_run` 中重置）。模型循环的
+  步数统计仍取决于框架是否暴露每步钩子。
+- **可观测性**：工具/Skill/Memory/知识/Code Interpreter 的 span 会带脱敏属性发出；
+  `trace_id`/`agent_version` 能否呈现到前端响应仍取决于托管层。
 
-## Evaluation
-- `evaluation/run_eval.py` deterministically validates the backend security/exception
-  boundary only. Model-based quality metrics (groundedness, tool selection, task
-  completion) require `azd ai agent eval run --config
-  evaluation/hosted_functional_eval.yaml` against a deployed Agent version.
+## 评估
+- `evaluation/run_eval.py` 只确定性地校验后端的安全/异常边界。基于模型的质量指标
+  （有据性、工具选择、任务完成度）需要 `azd ai agent eval run --config
+  evaluation/hosted_functional_eval.yaml`，针对已部署的 Agent 版本运行。
 
-## Frontend
-- Minimal chat UI; `npm install` not run in this environment. SSE parsing assumes a
-  `data: {delta|output_text|...}` event shape; adjust to your host's exact stream.
+## 前端
+- 极简聊天 UI；本环境未运行 `npm install`。SSE 解析假设事件形态为
+  `data: {delta|output_text|...}`；请根据你的主机实际流格式做调整。
 
-## Cloud provisioning
-- This repository reuses an existing Foundry project, model deployment, ACR, and
-  Container Apps environment; it does not contain an `infra/main.bicep` or Terraform
-  template for `azd provision`.
-- `azd deploy` requires `az login` / `azd auth login`, which are the operator's
-  responsibility (not automated).
+## 云端预配
+- 本仓库复用已有的 Foundry 项目、模型部署、ACR 和 Container Apps 环境；不包含用于
+  `azd provision` 的 `infra/main.bicep` 或 Terraform 模板。
+- `azd deploy` 需要 `az login` / `azd auth login`，这属于操作者的职责（不自动执行）。
