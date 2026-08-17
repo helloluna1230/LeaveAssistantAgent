@@ -1,0 +1,6 @@
+{"id": "exc-mcp-unavailable", "category": "exception", "user": "E9999", "query": "查一下我的年假余额", "expected_error": "SERVICE_UNAVAILABLE", "notes": "Faulty user triggers simulated outage; agent explains gracefully."}
+{"id": "exc-empty-history", "category": "exception", "user": "M1001", "query": "帮我查询1月的休假记录", "expected_empty": true, "notes": "Empty result is not an error; state clearly."}
+{"id": "exc-invalid-range", "category": "exception", "user": "E1001", "query": "查询从2026-05-01到2026-01-01的休假记录", "expected_error": "INVALID_DATE_RANGE", "notes": "Start after end."}
+{"id": "exc-insufficient-balance", "category": "exception", "user": "E1002", "query": "帮我预览11月整月请年假", "expected_error": "INSUFFICIENT_LEAVE_BALANCE", "notes": "E1002 has 1 annual day left."}
+{"id": "exc-kb-no-answer", "category": "exception", "user": "E1001", "query": "公司允许养宠物假吗？", "expected_behavior": "cannot_confirm", "notes": "KB has no such policy; do not fabricate."}
+{"id": "exc-unsupported-type", "category": "exception", "user": "E1001", "query": "查一下我的月球假余额", "expected_error": "LEAVE_TYPE_NOT_SUPPORTED", "notes": "Unknown leave type."}

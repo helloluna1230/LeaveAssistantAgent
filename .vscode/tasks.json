@@ -1,0 +1,40 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "install: all",
+      "type": "shell",
+      "command": "pip install -r agents/leave_assistant/requirements.txt -r mcp-server/requirements-dev.txt",
+      "problemMatcher": []
+    },
+    {
+      "label": "test: all",
+      "type": "shell",
+      "command": "python -m pytest mcp-server/tests skills/leave_planning/tests agents/tests tests -q",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "eval: backend boundary",
+      "type": "shell",
+      "command": "python evaluation/run_eval.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "run: MCP server",
+      "type": "shell",
+      "command": "python -m uvicorn leave_mcp.server:app --host 0.0.0.0 --port 8080",
+      "options": { "cwd": "${workspaceFolder}/mcp-server" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "run: frontend",
+      "type": "shell",
+      "command": "npm install && npm run dev",
+      "options": { "cwd": "${workspaceFolder}/frontend/web-chat-ui" },
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

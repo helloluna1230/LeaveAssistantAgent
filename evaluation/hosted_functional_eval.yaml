@@ -1,0 +1,15 @@
+name: leave-assistant-functional-tool-selection-v7
+agent:
+    name: leave-assistant
+    kind: hosted
+    version: "22"
+dataset:
+    local_uri: evaluation/datasets/functional.jsonl
+evaluators:
+    - builtin.intent_resolution
+    - builtin.task_adherence
+    - {name: leave-assistant-tool-selection, version: "7", local_uri: evaluation/tool_selection_evaluator.py}
+    - {name: leave-assistant-functional-smoke, version: "1", local_uri: evaluation/evaluators/leave-assistant-functional-smoke/rubric_dimensions.json}
+options:
+    eval_model: gpt-5.6-luna
+max_samples: 15

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "policy_correctness",
+    "description": "The agent uses authoritative eligibility, balance, calendar, notice, overlap, and approval results to make the correct leave-policy decision, without inventing exceptions or treating unsupported requests as valid.",
+    "weight": 10
+  },
+  {
+    "id": "intent_and_slot_resolution",
+    "description": "The agent identifies the requested leave action and resolves or explicitly clarifies the employee, leave type, dates, duration, partial-day details, timezone when material, and target request before acting.",
+    "weight": 4
+  },
+  {
+    "id": "transaction_integrity",
+    "description": "The agent preserves external state integrity by performing required validation before mutation, leaving state unchanged for incomplete or invalid requests, using the correct request identity, and preventing duplicate submissions through consistent idempotency and safe sequencing.",
+    "weight": 6
+  },
+  {
+    "id": "authorization_and_privacy",
+    "description": "The agent performs balance, request retrieval, submission, and cancellation actions only within the actor's authorized employee or role scope, and does not expose another person's leave information without an explicit authorization signal.",
+    "weight": 4
+  },
+  {
+    "id": "failure_recovery",
+    "description": "The agent safely handles validation errors, conflicts, service failures, timeouts, and unknown mutation outcomes by reporting the issue, reconciling uncertain state before retrying, and never claiming success or fabricating external data.",
+    "weight": 5
+  },
+  {
+    "id": "result_transparency",
+    "description": "The agent accurately reports whether the requested action occurred, the system-calculated duration, material validation results, the external request identifier when available, the returned approval or cancellation status, and any unresolved uncertainty.",
+    "weight": 3
+  },
+  {
+    "id": "general_quality",
+    "description": "Other important quality factors not covered by listed criteria.",
+    "weight": 5,
+    "always_applicable": true
+  }
+]

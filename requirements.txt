@@ -1,0 +1,4 @@
+# Root dependency manifest for the Foundry hosted-agent remote build.
+# The hosted agent's entry point is agents/leave_assistant/main.py; its runtime
+# deps live in that folder. Keep this thin (re-export) so there's one source.
+-r agents/leave_assistant/requirements.txt

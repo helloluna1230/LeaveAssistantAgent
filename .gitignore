@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / frontend
+node_modules/
+dist/
+frontend/web-chat-ui/dist/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Azure Developer CLI
+.azure/
+
+# Foundry workspace cache
+.foundry/
+
+# Runtime stores (per-user, generated)
+agents/leave_assistant/.memory_store.json
+agents/leave_assistant/.session_store.json
+
+# Evaluation results (keep dir, ignore run outputs)
+evaluation/results/*
+!evaluation/results/.gitkeep
+
+# OS / editor
+.DS_Store
+*.log
+
+docs/superpowers/*

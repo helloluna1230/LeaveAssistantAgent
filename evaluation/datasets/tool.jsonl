@@ -1,0 +1,6 @@
+{"id": "tool-select-balance", "category": "tool", "user": "E1001", "query": "查一下我的年假余额", "expected_tools": ["get_leave_balance"], "forbidden_tools": ["get_leave_history"], "notes": "Balance only."}
+{"id": "tool-select-history", "category": "tool", "user": "E1001", "query": "我三月有没有休过假？", "expected_tools": ["get_leave_history"], "forbidden_tools": ["get_leave_balance"], "notes": "History only."}
+{"id": "tool-select-knowledge", "category": "tool", "user": "E1001", "query": "调休可以保留多久？", "expected_tools": ["HRPolicyKnowledge"], "forbidden_tools": ["get_leave_balance", "get_leave_history"], "notes": "Policy -> knowledge tool."}
+{"id": "tool-select-skill", "category": "tool", "user": "E1001", "query": "帮我把剩余年假安排成几个长假", "expected_tools": ["plan_leave"], "notes": "Planning skill; may also fetch balance/holidays."}
+{"id": "tool-no-tool", "category": "tool", "user": "E1001", "query": "谢谢！", "expected_tools": [], "notes": "No tool for thanks."}
+{"id": "tool-code-interpreter", "category": "tool", "user": "E1001", "query": "分析一下我今年的假期使用情况并生成图表", "expected_tools": ["get_leave_balance", "get_leave_history", "code_interpreter"], "notes": "Analysis -> code interpreter over retrieved data."}

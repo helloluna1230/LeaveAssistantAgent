@@ -1,0 +1,17 @@
+name: leave-assistant-instruction-optimization
+agent:
+    name: leave-assistant
+    kind: hosted
+    version: "16"
+    model: gpt-5.6-luna
+    config: .agent_configs/baseline/metadata.yaml
+dataset:
+    local_uri: evaluation/datasets/functional.jsonl
+evaluators:
+    - builtin.intent_resolution
+    - builtin.task_adherence
+    - {name: leave-assistant-functional-smoke, version: "1", local_uri: evaluation/evaluators/leave-assistant-functional-smoke/rubric_dimensions.json}
+options:
+    eval_model: gpt-5.6-luna
+    optimization_model: gpt-5.4
+    max_candidates: 2

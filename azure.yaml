@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: leave-assistant-demo
+metadata:
+    template: leave-assistant-demo@1.0.0
+services:
+    leave-assistant:
+        host: azure.ai.agent
+        kind: hosted
+        name: leave-assistant
+        description: >-
+            Leave Assistant is an enterprise HR leave assistant hosted by Microsoft Foundry.
+            It answers leave balance, history, and policy questions; plans leave; and remembers
+            explicit user preferences. All HR data is simulated.
+        metadata:
+            tags:
+                - Agent Framework
+                - AI Agent Hosting
+                - Azure AI AgentServer
+                - Responses Protocol
+                - HR
+                - Streaming
+        protocols:
+            - protocol: responses
+              version: 2.0.0
+        language: python
+        project: .
+        startupCommand: "python agents/leave_assistant/main.py"
+        container:
+            resources:
+                cpu: "0.5"
+                memory: 1Gi
+        codeConfiguration:
+            dependencyResolution: remote_build
+            entryPoint: agents/leave_assistant/main.py
+            runtime: python_3_13
+        env:
+            AGENT_MAX_STEPS: ${AGENT_MAX_STEPS}
+            AGENT_MAX_TOOL_CALLS: ${AGENT_MAX_TOOL_CALLS}
+            APPLICATIONINSIGHTS_CONNECTION_STRING: ${APPLICATIONINSIGHTS_CONNECTION_STRING}
+            AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
+            DEMO_DEFAULT_USER: ${DEMO_DEFAULT_USER}
+            ENABLE_INSTRUMENTATION: ${ENABLE_INSTRUMENTATION}
+            FOUNDRY_AGENT_NAME: ${FOUNDRY_AGENT_NAME}
+            FOUNDRY_KNOWLEDGE_INDEX: ${FOUNDRY_KNOWLEDGE_INDEX}
+            FOUNDRY_MEMORY_STORE: ${FOUNDRY_MEMORY_STORE}
+            FOUNDRY_PROJECT_ENDPOINT: ${FOUNDRY_PROJECT_ENDPOINT}
+            MCP_MODE: ${MCP_MODE}
+            OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME}
+            RESPONSES_STORE: ${RESPONSES_STORE}
+            TOOLBOX_ENDPOINT: ${TOOLBOX_ENDPOINT}
+            TOOLBOX_NAME: ${TOOLBOX_NAME}

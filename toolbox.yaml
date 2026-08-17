@@ -1,0 +1,56 @@
+# toolbox.yaml — Leave Assistant governed toolbox (tools + Agent Skills over MCP).
+#
+# This is the AUTHORING input for `azd ai toolbox create`, the documented path
+# when you want the toolbox to also govern Agent Skills (the leave-planning
+# skill). For a tools-only toolbox you can instead run scripts/create_toolbox.py.
+#
+# Prerequisites (run once, against the SAME Foundry project you deploy to):
+#   azd ai project set "https://<account>.services.ai.azure.com/api/projects/<project>"
+#   # 1) Package and upload SKILL.md + planner.py
+#   bash scripts/upload-leave-planning-skill.sh
+#   # 2) Create the toolbox from this file (fill the placeholders below first)
+#   azd ai toolbox create leave-assistant-toolbox --from-file ./toolbox.yaml --no-prompt
+#   # 3) Add the printed endpoint to .env as TOOLBOX_ENDPOINT, then sync:
+#   bash scripts/azd-env-sync.sh
+#
+# Field sources:
+#   tools[mcp].server_url                    = MCP_SERVER_ENDPOINT
+#   tools[mcp].project_connection_id         = MCP project connection short name
+#   tools[azure_ai_search].project_connection_id
+#                                               = <AZURE_AI_PROJECT_ID>/connections/<search-connection-name>
+#   tools[azure_ai_search].index_name        = index created by Knowledge ingestion
+#   tools[azure_ai_search].semantic_configuration
+#                                               = semantic config defined on that index
+# Connection credentials stay in Foundry. Never put x-api-key or Search keys in this file.
+# All referenced connections, skills, and indexes must belong to the same Foundry project.
+#
+# All HR data is SIMULATED.
+description: Leave Assistant governed tools + skills (SIMULATED HR)
+
+tools:
+  # Mock HR MCP server on Container App. Credentials live in a Foundry connection.
+  - type: mcp
+    server_label: leave-hr
+    server_url: https://<mcp-containerapp-fqdn>/mcp
+    require_approval: never
+    project_connection_id: leave-mcp-conn # Short name from `azd ai connection show leave-mcp-conn`
+
+  # Code Interpreter (data analysis / charts). Shared per-project container.
+  - type: code_interpreter
+    container: { type: auto }
+    name: code_interpreter
+
+  # Foundry IQ / Azure AI Search grounding for HR policy Q&A (optional).
+  - type: azure_ai_search
+    name: hr_policy_search
+    azure_ai_search:
+      indexes:
+        - project_connection_id: <AZURE_AI_PROJECT_ID>/connections/<search-connection-name>
+          index_name: hr-leave-policies-index
+          query_type: semantic
+          semantic_configuration: hr-leave-policies-semantic-configuration # Must exist on the index
+          top_k: 5
+
+# Agent Skills discovered over MCP via skill://index.json (progressive disclosure).
+skills:
+  - name: leave-planning   # follows the skill's default version
