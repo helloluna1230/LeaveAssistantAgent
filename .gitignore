@@ -36,4 +36,5 @@ evaluation/results/*
 .DS_Store
 *.log
 
+docs/architecture/
 docs/superpowers/*
