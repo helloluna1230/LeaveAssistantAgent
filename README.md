@@ -343,7 +343,7 @@ bash scripts/azd-env-sync.sh
 Search** 中选择 Search service，并选择 API key 或 Microsoft Entra ID 认证。若选择 Entra ID，
 请同时配置前述 Search data-plane RBAC。
 
-![Azure AI Search connection](docs/assets/images/aisearch.png)
+![Azure AI Search connection](docs/assets/images/aisearch-conn.png)
 
 然后创建 Knowledge：
 
