@@ -80,6 +80,13 @@ azure.yaml                Hosted Agent 的统一 azd service 定义
 toolbox.yaml              环境相关的 Toolbox 定义
 ```
 
+## 官方快速入门参考
+
+Microsoft Learn 提供了从空目录创建、测试、部署并调用第一个 Hosted Agent 的完整教程：
+
+- [快速启动：部署第一个托管代理 - Microsoft Foundry](https://learn.microsoft.com/zh-cn/azure/foundry/agents/quickstarts/quickstart-hosted-agent?pivots=azd)
+
+
 ## 本地快速开始
 
 要求：Python 3.11+、Node.js 18+。模型调用需要可访问的 Foundry 项目和有效 Azure 登录。
@@ -121,11 +128,10 @@ azd ai agent invoke leave-assistant --local "hello, are you up?"
 
 命令应显示目标为 `localhost:8088 (local)`、返回 Agent 回复，并以
 `Server responded in ...` 结束。测试完成后在第一个终端按 `Ctrl+C` 停止 Host。
-
-
-azd ai inspector launch。
-![azd ai inspector](docs/assets/images/inspector.png)
-
+```bash
+azd ai inspector launch
+```
+![MCP endpoint](docs/assets/images/mcp-endpoint.png)
 
 分别启动 Agent Host 和前端：
 
@@ -255,12 +261,8 @@ bash scripts/azd-env-sync.sh
 ```
 
 同步脚本会从 `FOUNDRY_PROJECT_ENDPOINT` 解析真实 project ARM ID、区域、subscription 和
-tenant，并创建或选择本地 `leave-assistant-demo` azd environment。该步骤只同步部署配置，
-不会创建任何 Azure 资源。
-
-当前仓库没有 `infra/main.bicep` 或 Terraform 模板，因此不需要执行 `azd provision`；该命令
-会因找不到基础设施模板而失败。Foundry project、模型、ACR 和 Container Apps environment
-必须按前置条件提前创建，Hosted Agent 则由第 5 步的 `azd deploy leave-assistant` 创建或更新。
+tenant，并创建或选择本地 `leave-assistant-demo` azd environment。该步骤只同步部署配置，不会创建任何 Azure 资源。
+Hosted Agent 则由第 5 步的 `azd deploy leave-assistant` 创建或更新。
 
 ### 2. 部署并连接 Mock HR MCP
 
@@ -544,7 +546,8 @@ azd ai agent optimize \
 
 ## 文档
 
-- 系统设计：[Architecture](docs/architecture.md) · [Security](docs/security-design.md) · [API contract](docs/architecture/api-contract.yaml)
+- 系统设计：[Architecture](docs/architecture.md) · [Security](docs/security-design.md)
+- API contract 位于本地 `docs/architecture/api-contract.yaml`，不纳入版本控制
 - 组件指南：[MCP](mcp-server/README.md) · [Knowledge](knowledge/README.md) · [Web UI](frontend/web-chat-ui/README.md)
 - 生命周期：[Evaluation](evaluation/README.md) · [Optimizer](agent-optimizer/README.md) · [Demo](docs/demo-script.md)
 

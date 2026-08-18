@@ -17,7 +17,9 @@ Open http://localhost:5173.
 
 ## Backend contract
 
-This UI implements [`docs/architecture/api-contract.yaml`](../../docs/architecture/api-contract.yaml):
+This UI implements the local-only contract at
+`docs/architecture/api-contract.yaml` (the file is intentionally excluded from
+version control):
 
 - `POST /demo/token` — validate a demo employee id (the route name is retained for compatibility).
 - `POST /responses` — send a turn (streams SSE); forwards the selected demo identity.
